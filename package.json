@@ -1,0 +1,30 @@
+{
+  "name": "trabalhofinalpi",
+  "version": "1.0.0",
+  "description": "Criação de uma pagina onde é realizado uma organização de equipes de LOL para competir",
+  "keywords": [
+    "LOL",
+    "lol",
+    "league",
+    "of",
+    "legends",
+    "competição",
+    "campeonato"
+  ],
+  "homepage": "https://github.com/luisgustavogsilva1705-code/TrabalhoFinalPI#readme",
+  "bugs": {
+    "url": "https://github.com/luisgustavogsilva1705-code/TrabalhoFinalPI/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luisgustavogsilva1705-code/TrabalhoFinalPI.git"
+  },
+  "license": "ISC",
+  "author": "Luis Gustavo",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js", 
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
