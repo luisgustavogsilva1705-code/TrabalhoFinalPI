@@ -8,6 +8,7 @@ const port = 5000;
 const server = express();
 var usuarioLogin = false;
 var lista_Equipe =[];
+var lista_Jogadores=[];
 
 server.use(session({
     secret: "Acess0S3cre70",
@@ -23,9 +24,18 @@ server.use(express.urlencoded({extended: true}));
 server.use(express.json());
 server.use(cookieParser());
 
-//1- Tela de Login
-//2- Menu do sistema
-//
+
+
+            //Falta colocar o botão de sair da pagina e ir pro login e adicionar a validação de acesso no site
+
+
+
+
+
+
+
+
+
 
 server.get("/",(requsicao, resposta)=>{
 
@@ -111,7 +121,26 @@ server.post("/",(requisicao, resposta)=>{
     }
 });
 
+function validarAcesso(requisicao, resposta, next)
+{
+    if(requisicao.session?. usuarioLogin?. logado )
+    {
+        next();
+    }
+    else
+    {
+        resposta.redirect("/");
+    }
+}
+
 server.get("/menu",(requisicao, resposta)=>{
+
+    let ultimoAcesso = requisicao.cookies?.ultimoAcesso;
+    const data= new Date();
+    resposta.cookie("ultimoAcesso",data.toLocaleString());
+
+
+    resposta.setHeader("Content-Type", "text/html");
     resposta.send(`
         <!DOCTYPE html>
                 <html>
@@ -123,25 +152,28 @@ server.get("/menu",(requisicao, resposta)=>{
             <body>
                 <nav class="navbar navbar-expand-lg navbar-light bg-light">
                     <div class="container-fluid">
-                        <p class="navbar-brand">E-Sportes</p>
+                        <p class="navbar-brand" style="color: green;">E-Sportes</p>
                         <div class="collapse navbar-collapse" id="navbarText">
                             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                                 <li class="nav-item">
                                     <a class="nav-link active" aria-current="page" href="/cadastroEquipes">Cadastro de Equipes</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#">Cadastro de Jogadores</a>
+                                    <a class="nav-link" href="/cadastroJogadores">Cadastro de Jogadores</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#">Lista de Equipes</a>
+                                    <a class="nav-link" href="/listaEquipes">Lista de Equipes</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#">Lista de Jogadores</a>
+                                    <a class="nav-link" href="/listaJogadores">Lista de Jogadores</a>
                                 </li>
                             </ul>
                         </div>
                     </div>
                 </nav>
+                <div>
+                    <p style="color: green;">Ultimo Acesso na página ${ultimoAcesso || "Primeiro Acesso"}</p>
+                </div>
             </body>
         </html>
         `
@@ -197,7 +229,7 @@ server.post('/cadastroEquipes',(requisicao, resposta)=>{
 
     if(nomeEquipe && nomeCapitao && contato)
     {
-        lista_Equipe.push({nomeEquipe,nomeCapitao, contato});
+        lista_Equipe.push({nomeEquipe,nomeCapitao, contato, jogadores:[]});
         resposta.redirect("/listaEquipes");
     }
     else
@@ -207,7 +239,7 @@ server.post('/cadastroEquipes',(requisicao, resposta)=>{
                 <html>
                 <head>
                     <meta charset="UTF-8">
-                    <title>Login</title>
+                    <title>Cadastro de Equipe</title>
                     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
                 </head>
             <body>
@@ -269,11 +301,337 @@ server.post('/cadastroEquipes',(requisicao, resposta)=>{
 });
 
 server.get("/listaEquipes",(requisicao, resposta)=>{
+    let conteudo=`
+        <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Equipes E-Sports</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+                </head>
+            <body>
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome da Equipe</td>
+                            <th>Nome do Capitão da Equipe</td>
+                            <th>Contato da Equipe</td>
+                        </tr>
+                    </thead>
+        
+                    <tbody>`;
+                for(let i = 0; i<lista_Equipe.length; i++)
+                {
+                    conteudo+=`
+                        <tr>
+                            <td>${lista_Equipe[i].nomeEquipe}</td>
+                            <td>${lista_Equipe[i].nomeCapitao}</td>
+                            <td>${lista_Equipe[i].contato}</td>
+                        </tr>
+                    `;
+                }
+                conteudo+=`
+                </tbody>
+                </table>
+
+                <a href="/menu" style="display:block; text-align:center; width:100%; padding:12px; background:#6c757d; color:white; border-radius:5px; font-size:16px; text-decoration:none; cursor:pointer;">
+                Voltar
+                </a>
+
+            </body>
+            </html>
+                `;
+                    
+    resposta.send(conteudo);
+});
+
+server.get("/cadastroJogadores",(requisicao,resposta)=>{
+    
+    let checkboxes = "";
+    for(let i = 0; i < lista_Equipe.length; i++) 
+    {
+
+        checkboxes += `
+            <label style="display:block; margin-bottom:5px;">
+                <input type="checkbox" name="equipe" value="${lista_Equipe[i].nomeEquipe}">
+                ${lista_Equipe[i].nomeEquipe}
+            </label>
+        `;
+    }
 
     resposta.send(`
-        
+        <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Equipes E-Sports</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+                </head>
+            <body>
+
+                <h3 style="text-align: center; text-decoration:underline; color: red;" >Cadastro de Jogadores E-Sportes</h3>
+
+                <div style="display:flex; justify-content:center; align-items:center; height:100vh;">
+                    
+                <form action="/cadastroJogadores" method="POST" 
+                    style="width:600px; padding:20px; border:2px solid #444; border-radius:10px;">
+
+                    <div style="display:flex; gap:20px;">
+
+                        <div style="width:50%;">
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Nome do Jogador:</label>
+                            <input type="text" name="nomeJogador" style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #ccc;">
+
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Nickname:</label>
+                            <input type="text" name="nickname" style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #ccc;">
+
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Rota do jogador:</label>
+                            <input type="text" name="rota" style="width:100%; padding:10px; margin-bottom:20px; border-radius:5px; border:1px solid #ccc;">
+                        </div>
+
+                        <div style="width:50%;">
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Elo do jogador:</label>
+                            <input type="text" name="elo" style="width:100%; padding:10px; margin-bottom:20px; border-radius:5px; border:1px solid #ccc;">
+
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Gênero:</label>
+                            <input type="text" name="genero" style="width:100%; padding:10px; margin-bottom:20px; border-radius:5px; border:1px solid #ccc;">
+
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Equipe:</label>
+                            ${checkboxes}
+                        </div>
+
+                    </div>
+
+                    <button type="submit" style="width:100%; margin-top:10px; padding:12px; background:#007bff; color:white; border:none; border-radius:5px; font-size:16px; cursor:pointer;">
+                        Enviar
+                    </button>
+                    <br>
+                    <br>
+                    <a href="/menu" style="display:block; text-align:center; width:100%; padding:12px; background:#6c757d; color:white; border-radius:5px; font-size:16px; text-decoration:none; cursor:pointer;">
+                        Voltar
+                    </a>
+
+                </form>
+                </div>
+            </body>
+            </html>
         `
-    )
+    );
+
+});
+
+server.post("/cadastroJogadores",(requisicao,resposta)=>{
+
+    const nomeJogador=requisicao.body.nomeJogador;
+    const nickname = requisicao.body.nickname;
+    const rota = requisicao.body.rota;
+    const elo = requisicao.body.elo;
+    const genero = requisicao.body.genero;
+    const equipe = requisicao.body.equipe;
+
+    const jogadoresEquipe = lista_Jogadores.filter(jogadores => jogadores.equipe === equipe);
+    let equipecheia="";
+    if (jogadoresEquipe.length >= 5) 
+    {
+        equipecheia = `A equipe ${equipe} está cheia`;
+    }
+
+
+    if(nomeJogador && nickname && rota && elo && genero && equipe && jogadoresEquipe.length < 5)
+    {
+        lista_Jogadores.push({nomeJogador,nickname,rota,elo,genero,equipe});
+        resposta.redirect("/listaJogadores");
+    }
+    else
+    {  
+        let conteudo=`
+        <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Equipes E-Sports</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+                </head>
+            <body>
+
+                <h3 style="text-align: center; text-decoration:underline; color: red;" >Cadastro de Jogadores E-Sportes</h3>
+
+                <div style="display:flex; justify-content:center; align-items:center; height:100vh;">
+                    
+                <form action="/cadastroJogadores" method="POST" 
+                    style="width:600px; padding:20px; border:2px solid #444; border-radius:10px;">
+
+                    <div style="display:flex; gap:20px;">
+
+                        <div style="width:50%;">
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Nome do Jogador:</label>
+                            <input type="text" name="nomeJogador" value="${nomeJogador}" style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #ccc;">`;
+    if(!nomeJogador)
+    {
+        conteudo+=`
+        <div>
+            <p style="color: red;">Deve-se preencher esse campo</p>
+        </div>
+        `
+    }
+    conteudo+=`
+
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Nickname:</label>
+                            <input type="text" name="nickname" value="${nickname}" style="width:100%; padding:10px; margin-bottom:15px; border-radius:5px; border:1px solid #ccc;">`;
+    if(!nickname)
+    {
+        conteudo+=`
+        <div>
+            <p style="color: red;">Deve-se preencher esse campo</p>
+        </div>
+        `
+    }
+    conteudo+=`
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Rota do jogador:</label>
+                            <input type="text" name="rota" value="${rota}" style="width:100%; padding:10px; margin-bottom:20px; border-radius:5px; border:1px solid #ccc;">`
+    if(!rota)
+    {
+        conteudo+=`
+        <div>
+            <p style="color: red;">Deve-se preencher esse campo</p>
+        </div>
+        `
+    }
+    conteudo+=`</div>
+
+                        <div style="width:50%;">
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Elo do jogador:</label>
+                            <input type="text" name="elo" value="${elo}" style="width:100%; padding:10px; margin-bottom:20px; border-radius:5px; border:1px solid #ccc;">`
+    if(!elo)
+    {
+        conteudo+=`
+        <div>
+            <p style="color: red;">Deve-se preencher esse campo</p>
+        </div>
+        `
+    }
+    conteudo+=`
+
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Gênero:</label>
+                            <input type="text" name="genero" value="${genero}" style="width:100%; padding:10px; margin-bottom:20px; border-radius:5px; border:1px solid #ccc;">`
+    if(!genero)
+    {
+        conteudo+=`
+        <div>
+            <p style="color: red;">Deve-se preencher esse campo</p>
+        </div>
+        `
+    }
+    conteudo+=`
+                            <label style="display:block; margin-bottom:5px; font-weight:bold;">Equipe:</label>`;
+                            let checkboxes = "";
+                            for(let i = 0; i < lista_Equipe.length; i++) 
+                            {
+
+                                checkboxes += `
+                                    <label style="display:block; margin-bottom:5px;">
+                                        <input type="checkbox" name="equipe" value="${lista_Equipe[i].nomeEquipe}">
+                                        ${lista_Equipe[i].nomeEquipe}
+                                    </label>
+                                `;
+                            }
+                            conteudo+=checkboxes;
+    if(!equipe)
+    {
+        conteudo+=`
+        <div>
+            <p style="color: red;">Deve-se preencher esse campo</p>
+        </div>
+        `
+    }
+    if(equipecheia)
+    {
+        conteudo+=`
+        <div>
+            <p style="color: red;">${equipecheia}</p>
+        </div>
+        `
+    }
+    conteudo+=`</div>
+
+                    </div>
+
+                    <button type="submit" style="width:100%; margin-top:10px; padding:12px; background:#007bff; color:white; border:none; border-radius:5px; font-size:16px; cursor:pointer;">
+                        Enviar
+                    </button>
+                    <br>
+                    <br>
+                    <a href="/menu" style="display:block; text-align:center; width:100%; padding:12px; background:#6c757d; color:white; border-radius:5px; font-size:16px; text-decoration:none; cursor:pointer;">
+                        Voltar
+                    </a>
+
+                </form>
+                </div>
+            </body>
+            </html>
+        `
+
+        resposta.send(conteudo);
+    }
+
+});
+
+server.get("/listaJogadores", (requisicao, resposta)=>{
+
+    let conteudo=`
+        <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Equipes E-Sports</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+                </head>
+            <body>
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Equipe</th>
+                            <th>Nome do Jogador</th>
+                            <th>Nickname</th>
+                            <th>Rota do Jogador</th>
+                            <th>Elo do Jogador</th>
+                            <th>Gênero</td>
+                        </tr>
+                    </thead>
+        
+                    <tbody>`;
+                for(let i = 0; i<lista_Equipe.length; i++)
+                {
+                    const jogadoresEquipe = lista_Jogadores.filter(jogadores => jogadores.equipe === lista_Equipe[i].nomeEquipe);
+
+                    for(let j=0; j< jogadoresEquipe.length; j++)
+                    {
+                        conteudo+=`
+                            <tr>
+                                <td>${lista_Equipe[i].nomeEquipe}</td>
+                                <td>${jogadoresEquipe[j].nomeJogador}</td>
+                                <td>${jogadoresEquipe[j].nickname}</td>
+                                <td>${jogadoresEquipe[j].rota}</td>
+                                <td>${jogadoresEquipe[j].elo}</td>
+                                <td>${jogadoresEquipe[j].genero}</td>
+                            </tr>
+                        `;
+                    }
+                }
+                conteudo+=`
+                </tbody>
+                </table>
+
+                <a href="/menu" style="display:block; text-align:center; width:100%; padding:12px; background:#6c757d; color:white; border-radius:5px; font-size:16px; text-decoration:none; cursor:pointer;">
+                Voltar
+                </a>
+
+            </body>
+            </html>
+                `;
+    
+    resposta.send(conteudo);
+
 });
 
 
