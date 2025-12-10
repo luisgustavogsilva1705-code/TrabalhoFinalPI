@@ -40,8 +40,10 @@ server.get("/",(requsicao, resposta)=>{
                 </head>
             <body>
 
-
-            <form action="/" method="POST"  >
+            <h3 style="text-align: center; color: green; text-decoration: underline" >Login</h3>
+            <hr>
+            <hr>
+            <form action="/" method="POST"  >   
                 <div class="mb-3">
                     <label for="Email" class="form-label">Email</label>
                     <input type="email" name="loginEmail" class="form-control" id="Email" aria-describedby="emailHelp">
@@ -51,6 +53,9 @@ server.get("/",(requsicao, resposta)=>{
                     <input type="password" name="loginSenha" class="form-control" id="Senha">
                 </div>
                 <button type="submit" class="btn btn-primary">Entrar</button>
+                <div>
+                    <p>Email: admin@email.com<br> Senha: senha</p>
+                </div>
                 </form>
 
             </body>
@@ -96,10 +101,13 @@ server.post("/",(requisicao, resposta)=>{
                     </div>
 
                     <div>
-                        <p>Usuário ou Senha Incorretos, Tente Novamente</p>
+                        <p style="color: red;">Usuário ou Senha Incorretos, Tente Novamente</p>
                     </div>
 
                     <button type="submit" class="btn btn-primary">Entrar</button>
+                    <div>
+                        <p>Email: admin@email.com<br> Senha: senha</p>
+                    </div>
                     </form>
 
                 </body>
@@ -157,7 +165,7 @@ server.get("/menu",validarAcesso,(requisicao, resposta)=>{
                                     <a class="nav-link" href="/listaJogadores">Lista de Jogadores</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="/">SAIR</a>
+                                    <a class="nav-link" style="color: red;" href="/">SAIR</a>
                                 </li>
                             </ul>
                         </div>
