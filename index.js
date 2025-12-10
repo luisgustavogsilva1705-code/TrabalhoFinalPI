@@ -26,17 +26,6 @@ server.use(cookieParser());
 
 
 
-            //Falta colocar o botão de sair da pagina e ir pro login e adicionar a validação de acesso no site
-
-
-
-
-
-
-
-
-
-
 server.get("/",(requsicao, resposta)=>{
 
     resposta.send(`
@@ -55,7 +44,6 @@ server.get("/",(requsicao, resposta)=>{
                 <div class="mb-3">
                     <label for="Email" class="form-label">Email address</label>
                     <input type="email" name="loginEmail" class="form-control" id="Email" aria-describedby="emailHelp">
-                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
                 </div>
                 <div class="mb-3">
                     <label for="Senha" class="form-label">Password</label>
@@ -133,7 +121,7 @@ function validarAcesso(requisicao, resposta, next)
     }
 }
 
-server.get("/menu",(requisicao, resposta)=>{
+server.get("/menu",validarAcesso,(requisicao, resposta)=>{
 
     let ultimoAcesso = requisicao.cookies?.ultimoAcesso;
     const data= new Date();
@@ -180,7 +168,7 @@ server.get("/menu",(requisicao, resposta)=>{
     );
 });
 
-server.get("/cadastroEquipes",(requisicao, resposta)=>{
+server.get("/cadastroEquipes", validarAcesso,(requisicao, resposta)=>{
     resposta.send(`
         <!DOCTYPE html>
                 <html>
@@ -212,6 +200,7 @@ server.get("/cadastroEquipes",(requisicao, resposta)=>{
                         <a href="/menu" style="display:block; text-align:center; width:100%; padding:12px; background:#6c757d; color:white; border-radius:5px; font-size:16px; text-decoration:none; cursor:pointer;">
                             Voltar
                         </a>
+                        
 
                     </form>
                 </div>
@@ -221,7 +210,7 @@ server.get("/cadastroEquipes",(requisicao, resposta)=>{
     );
 });
 
-server.post('/cadastroEquipes',(requisicao, resposta)=>{
+server.post('/cadastroEquipes', validarAcesso,(requisicao, resposta)=>{
 
     const nomeEquipe= requisicao.body.nomeEquipe;
     const nomeCapitao= requisicao.body.nomeCapitao;
@@ -300,7 +289,7 @@ server.post('/cadastroEquipes',(requisicao, resposta)=>{
 
 });
 
-server.get("/listaEquipes",(requisicao, resposta)=>{
+server.get("/listaEquipes", validarAcesso,(requisicao, resposta)=>{
     let conteudo=`
         <!DOCTYPE html>
             <html>
@@ -337,6 +326,11 @@ server.get("/listaEquipes",(requisicao, resposta)=>{
                 <a href="/menu" style="display:block; text-align:center; width:100%; padding:12px; background:#6c757d; color:white; border-radius:5px; font-size:16px; text-decoration:none; cursor:pointer;">
                 Voltar
                 </a>
+                <br>
+                <br>
+                <a href="/cadastroEquipes" style="display:block; text-align:center; width:100%; padding:12px; background:#6c757d; color:white; border-radius:5px; font-size:16px; text-decoration:none; cursor:pointer;">
+                Cadastrar mais Equipes
+                </a>
 
             </body>
             </html>
@@ -345,13 +339,13 @@ server.get("/listaEquipes",(requisicao, resposta)=>{
     resposta.send(conteudo);
 });
 
-server.get("/cadastroJogadores",(requisicao,resposta)=>{
+server.get("/cadastroJogadores", validarAcesso,(requisicao,resposta)=>{
     
-    let checkboxes = "";
+    let boxEquipes = "";
     for(let i = 0; i < lista_Equipe.length; i++) 
     {
 
-        checkboxes += `
+        boxEquipes += `
             <label style="display:block; margin-bottom:5px;">
                 <input type="checkbox" name="equipe" value="${lista_Equipe[i].nomeEquipe}">
                 ${lista_Equipe[i].nomeEquipe}
@@ -397,7 +391,7 @@ server.get("/cadastroJogadores",(requisicao,resposta)=>{
                             <input type="text" name="genero" style="width:100%; padding:10px; margin-bottom:20px; border-radius:5px; border:1px solid #ccc;">
 
                             <label style="display:block; margin-bottom:5px; font-weight:bold;">Equipe:</label>
-                            ${checkboxes}
+                            ${boxEquipes}
                         </div>
 
                     </div>
@@ -420,7 +414,7 @@ server.get("/cadastroJogadores",(requisicao,resposta)=>{
 
 });
 
-server.post("/cadastroJogadores",(requisicao,resposta)=>{
+server.post("/cadastroJogadores", validarAcesso,(requisicao,resposta)=>{
 
     const nomeJogador=requisicao.body.nomeJogador;
     const nickname = requisicao.body.nickname;
@@ -428,6 +422,7 @@ server.post("/cadastroJogadores",(requisicao,resposta)=>{
     const elo = requisicao.body.elo;
     const genero = requisicao.body.genero;
     const equipe = requisicao.body.equipe;
+
 
     const jogadoresEquipe = lista_Jogadores.filter(jogadores => jogadores.equipe === equipe);
     let equipecheia="";
@@ -524,18 +519,18 @@ server.post("/cadastroJogadores",(requisicao,resposta)=>{
     }
     conteudo+=`
                             <label style="display:block; margin-bottom:5px; font-weight:bold;">Equipe:</label>`;
-                            let checkboxes = "";
+                            let boxEquipes = "";
                             for(let i = 0; i < lista_Equipe.length; i++) 
                             {
 
-                                checkboxes += `
+                                boxEquipes += `
                                     <label style="display:block; margin-bottom:5px;">
                                         <input type="checkbox" name="equipe" value="${lista_Equipe[i].nomeEquipe}">
                                         ${lista_Equipe[i].nomeEquipe}
                                     </label>
                                 `;
                             }
-                            conteudo+=checkboxes;
+                            conteudo+=boxEquipes;
     if(!equipe)
     {
         conteudo+=`
@@ -576,7 +571,7 @@ server.post("/cadastroJogadores",(requisicao,resposta)=>{
 
 });
 
-server.get("/listaJogadores", (requisicao, resposta)=>{
+server.get("/listaJogadores", validarAcesso, (requisicao, resposta)=>{
 
     let conteudo=`
         <!DOCTYPE html>
@@ -624,6 +619,11 @@ server.get("/listaJogadores", (requisicao, resposta)=>{
 
                 <a href="/menu" style="display:block; text-align:center; width:100%; padding:12px; background:#6c757d; color:white; border-radius:5px; font-size:16px; text-decoration:none; cursor:pointer;">
                 Voltar
+                </a>
+                <br>
+                <br>
+                <a href="/cadastroJogadores" style="display:block; text-align:center; width:100%; padding:12px; background:#6c757d; color:white; border-radius:5px; font-size:16px; text-decoration:none; cursor:pointer;">
+                Cadastrar mais Jogadores
                 </a>
 
             </body>
