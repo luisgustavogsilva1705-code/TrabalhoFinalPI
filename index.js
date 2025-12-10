@@ -9,6 +9,7 @@ const server = express();
 var usuarioLogin = false;
 var lista_Equipe =[];
 var lista_Jogadores=[];
+var rotas_disponiveis=["mid", "top", "suporte", "adc", "jungle"];
 
 server.use(session({
     secret: "Acess0S3cre70",
@@ -42,14 +43,14 @@ server.get("/",(requsicao, resposta)=>{
 
             <form action="/" method="POST"  >
                 <div class="mb-3">
-                    <label for="Email" class="form-label">Email address</label>
+                    <label for="Email" class="form-label">Email</label>
                     <input type="email" name="loginEmail" class="form-control" id="Email" aria-describedby="emailHelp">
                 </div>
                 <div class="mb-3">
-                    <label for="Senha" class="form-label">Password</label>
+                    <label for="Senha" class="form-label">Senha</label>
                     <input type="password" name="loginSenha" class="form-control" id="Senha">
                 </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" class="btn btn-primary">Entrar</button>
                 </form>
 
             </body>
@@ -86,11 +87,11 @@ server.post("/",(requisicao, resposta)=>{
 
                 <form action="/" method="POST"  >
                     <div class="mb-3">
-                        <label for="Email" class="form-label">Email address</label>
+                        <label for="Email" class="form-label">Email</label>
                         <input type="email" name="loginEmail" class="form-control" id="Email" aria-describedby="emailHelp">
                     </div>
                     <div class="mb-3">
-                        <label for="Senha" class="form-label">Password</label>
+                        <label for="Senha" class="form-label">Senha</label>
                         <input type="password" name="loginSenha" class="form-control" id="Senha">
                     </div>
 
@@ -111,7 +112,7 @@ server.post("/",(requisicao, resposta)=>{
 
 function validarAcesso(requisicao, resposta, next)
 {
-    if(requisicao.session?. usuarioLogin?. logado )
+    if(requisicao.session?. usuarioLogin?. online)
     {
         next();
     }
@@ -154,6 +155,9 @@ server.get("/menu",validarAcesso,(requisicao, resposta)=>{
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="/listaJogadores">Lista de Jogadores</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/">SAIR</a>
                                 </li>
                             </ul>
                         </div>
@@ -201,7 +205,6 @@ server.get("/cadastroEquipes", validarAcesso,(requisicao, resposta)=>{
                             Voltar
                         </a>
                         
-
                     </form>
                 </div>
             </body>
@@ -423,6 +426,17 @@ server.post("/cadastroJogadores", validarAcesso,(requisicao,resposta)=>{
     const genero = requisicao.body.genero;
     const equipe = requisicao.body.equipe;
 
+    let boxEquipes = "";
+        for(let i = 0; i < lista_Equipe.length; i++) 
+    {
+
+        boxEquipes += `
+            <label style="display:block; margin-bottom:5px;">
+                <input type="checkbox" name="equipe" value="${lista_Equipe[i].nomeEquipe}">
+                ${lista_Equipe[i].nomeEquipe}
+            </label>    
+        `;
+    }
 
     const jogadoresEquipe = lista_Jogadores.filter(jogadores => jogadores.equipe === equipe);
     let equipecheia="";
@@ -431,8 +445,11 @@ server.post("/cadastroJogadores", validarAcesso,(requisicao,resposta)=>{
         equipecheia = `A equipe ${equipe} está cheia`;
     }
 
+    const rotaIndisponivel= jogadoresEquipe.some(jogadores => jogadores.rota === rota);
+    let msgRota ="Essa rota já foi selecionada!!";
 
-    if(nomeJogador && nickname && rota && elo && genero && equipe && jogadoresEquipe.length < 5)
+
+    if(nomeJogador && nickname && rota && elo && genero && equipe && jogadoresEquipe.length < 5 && !rotaIndisponivel)
     {
         lista_Jogadores.push({nomeJogador,nickname,rota,elo,genero,equipe});
         resposta.redirect("/listaJogadores");
@@ -492,6 +509,14 @@ server.post("/cadastroJogadores", validarAcesso,(requisicao,resposta)=>{
         </div>
         `
     }
+    if(rotaIndisponivel)
+    {
+        conteudo+=`
+        <div>
+            <p style="color: red;">${msgRota}</p>
+        </div>
+        `
+    }
     conteudo+=`</div>
 
                         <div style="width:50%;">
@@ -519,17 +544,6 @@ server.post("/cadastroJogadores", validarAcesso,(requisicao,resposta)=>{
     }
     conteudo+=`
                             <label style="display:block; margin-bottom:5px; font-weight:bold;">Equipe:</label>`;
-                            let boxEquipes = "";
-                            for(let i = 0; i < lista_Equipe.length; i++) 
-                            {
-
-                                boxEquipes += `
-                                    <label style="display:block; margin-bottom:5px;">
-                                        <input type="checkbox" name="equipe" value="${lista_Equipe[i].nomeEquipe}">
-                                        ${lista_Equipe[i].nomeEquipe}
-                                    </label>
-                                `;
-                            }
                             conteudo+=boxEquipes;
     if(!equipe)
     {
